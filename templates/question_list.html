@@ -1,0 +1,6 @@
+<ul>
+    {% for question in questions %}
+        <li><a href="{% url 'get_answer' question_id=forloop.counter0 %}">{{ question }}</a></li>
+    {% endfor %}
+    </ul>
+    
