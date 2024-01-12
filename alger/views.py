@@ -15,6 +15,11 @@ class QuestionListView(APIView):
                      "Donnez-moi le plus gros livre, l'auteur, le nombre de pages, et le nom en arabe s'il existe?",
                      "the tallest mountain between algeria and france",
                      "Quel est le nom de la plus grande ville en France ou en Italie, où la population est supérieure à un million ?",
+                     " Quel est le premier film sorti en 2010  ?",
+                     "Pouvez-vous me donner des films algériens ?",
+                     "Quels sont les artistes originaires d'Algérie et ayant produit des œuvres artistiques ?",
+                     
+                     
                      ...])
         ]
         serializer = QuestionSerializer(questions, many=True)
@@ -28,6 +33,11 @@ class AnswerView(APIView):
                      "Donnez-moi le plus gros livre, l'auteur, le nombre de pages, et le nom en arabe s'il existe?",
                      "the tallest mountain between algeria and france",
                      "Quel est le nom de la plus grande ville en France ou en Italie, où la population est supérieure à un million ?",
+                     " Quel est le premier film sorti en 2010  ?",
+                     "Pouvez-vous me donner des films algériens ?",
+                     "Quels sont les artistes originaires d'Algérie et ayant produit des œuvres artistiques ?",
+                     
+                     
                      ...]
 
         # Define SPARQL queries directly in the view
@@ -124,36 +134,65 @@ class AnswerView(APIView):
                 }
                 ORDER BY DESC(?elevation)
                 LIMIT 1
-"""   
+            """   
             
         if question_id == 5:
             query ="""
-            PREFIX dbo: <http://dbpedia.org/ontology/>
-            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+                PREFIX dbo: <http://dbpedia.org/ontology/>
+                PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-            SELECT ?cityName WHERE {
-            ?city a dbo:City ;
-                    rdfs:label ?cityName ;
-                    dbo:populationTotal ?population ;
-                    dbo:country ?country .
-            FILTER(LANG(?cityName) = "en" && (?country = dbr:France || ?country = dbr:Italy) && ?population > 1000000)
+                SELECT ?cityName WHERE {
+                ?city a dbo:City ;
+                        rdfs:label ?cityName ;
+                        dbo:populationTotal ?population ;
+                        dbo:country ?country .
+                FILTER(LANG(?cityName) = "en" && (?country = dbr:France || ?country = dbr:Italy) && ?population > 1000000)
+                }
+                ORDER BY DESC(?population)
+                LIMIT 1
+
+            """ 
+            
+        if question_id == 6:
+            query ="""  
+                SELECT ?film ?englishName ?releaseDate
+                WHERE {
+                ?film rdf:type dbo:Film ;
+                        rdfs:label ?englishName ;
+                        dbo:releaseDate ?releaseDate .
+                FILTER (LANG(?englishName) = 'en' && YEAR(?releaseDate) = 2010)
+                }
+                ORDER BY ?releaseDate
+                LIMIT 1
+            """ 
+    
+        if question_id == 7:
+                query ="""
+            SELECT ?film ?filmTitle
+            WHERE {
+            ?film rdf:type dbo:Film ;
+                    dbo:country dbr:Algeria ;
+                    rdfs:label ?filmTitle .
+            FILTER (LANG(?filmTitle) = 'en')
             }
-            ORDER BY DESC(?population)
-            LIMIT 1
+            LIMIT 10
 
-            """     
-            '''
-            1- second viggest city in algeria by population
-            2- Donnez-moi actor birth 2003.
-            3-Donnez-moi le nom en anglais, le titre de l'œuvre en anglais, le nombre total de pages et le nom en arabe (s'il existe) pour les écrivains et leurs œuvres, triés par le nombre de pages total de leurs œuvres en ordre décroissan
+            """
             
-            4- the tallest mountain between algeria and france
-            
-            5-What is the name of the biggest city in either France or Italy, where the population is greater than 1 million? Provide the result in English.
-            
-            
+        if question_id == 8:
+                        query ="""
+                        SELECT ?artist ?artistName 
+            WHERE {
+            ?artist rdf:type dbo:Artist ;
+                    dbo:birthPlace dbr:Algeria ;
+                    rdfs:label ?artistName .
+            FILTER (LANG(?artistName) = 'en')
+            }
+            LIMIT 10
 
-            '''
+
+
+            """
         # Add other SPARQL queries for different questions here
 
         results = execute_sparql_query(query)
@@ -188,7 +227,7 @@ def get_answer_from_results(question_id,results):
                         'totalPages': result['totalPages']['value'],
                         
                     })
-        elif question_id == 4:
+        elif question_id == 4: 
                 answers.append({
                     'countryLabel': result['countryLabel']['value'],
                     'mountainLabel': result['mountainLabel']['value'],
@@ -196,6 +235,13 @@ def get_answer_from_results(question_id,results):
                 })
         elif question_id == 5:
             answers.append(result["cityName"]["value"])
+        elif question_id == 6:
+            answers.append(result["englishName"]["value"])
+        elif question_id == 7:
+            answers.append(result["filmTitle"]["value"])
+            
+        elif question_id == 8:
+            answers.append(result["artistName"]["value"])
             
             
         
