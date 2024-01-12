@@ -8,3 +8,7 @@ class QuestionSerializer(serializers.Serializer):
 class AnswerSerializer(serializers.Serializer):
     question_id = serializers.IntegerField()
     answer = serializers.CharField(max_length=255)
+
+class QuerySerializer(serializers.Serializer):
+    question_id = serializers.IntegerField()
+    query = serializers.CharField()
